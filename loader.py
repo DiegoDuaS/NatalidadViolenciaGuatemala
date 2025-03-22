@@ -131,10 +131,10 @@ def nat_loader():
         NatEtniaArea = nat_etnia_area(t_nat_etnia_area, y,NatEtniaArea)
     
     # Crear Csvs
-    NatDepMes.to_csv(f"NatDepMes.csv", index=False)
-    NatEdad.to_csv(f"NatEdad.csv", index=False)
-    NatDepEC.to_csv(f"NatDepEC.csv", index=False)
-    NatEdadEC.to_csv(f"NatEdadEC.csv", index=False)
-    NatNum.to_csv(f"NatNum.csv", index=False)
-    NatOcup.to_csv(f"NatOcup.csv", index=False)
-    NatEtniaArea.to_csv(f"NatEtniaArea.csv", index=False)
+    NatDepMes.to_csv(f"./data/nat/NatDepMes.csv", index=False)
+    NatEdad.to_csv(f"./data/nat/NatEdad.csv", index=False)
+    NatDepEC.to_csv(f"./data/nat/NatDepEC.csv", index=False)
+    NatEdadEC.to_csv(f"./data/nat/NatEdadEC.csv", index=False)
+    NatNum.to_csv(f"./data/nat/NatNum.csv", index=False)
+    NatOcup.to_csv(f"./data/nat/NatOcup.csv", index=False)
+    NatEtniaArea.to_csv(f"./data/nat/NatEtniaArea.csv", index=False)
