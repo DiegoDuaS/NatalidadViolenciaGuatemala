@@ -1,5 +1,3 @@
-
-import math
 import pandas as pd
 
 def nat_dep_mes(sheet, y, dest):
@@ -26,8 +24,7 @@ def nat_edad(sheet, y, dest):
     if(int(y)==9):
         sheet = sheet.iloc[:-1]
     return pd.concat([dest, sheet], ignore_index=True)
-    
-    
+     
 def nat_dep_ec(sheet, y, dest):
     if "Regresar" in sheet.columns:
         sheet.pop("Regresar")
@@ -55,7 +52,6 @@ def nat_edad_ec(sheet, y, dest, is_madre):
         sheet["Madre o Padre"] = "Padre"
     sheet["Anio"] = y
     return pd.concat([dest, sheet], ignore_index=True)
-    
     
 def nat_num(sheet, y, dest):
     if "Regresar" in sheet.columns:
