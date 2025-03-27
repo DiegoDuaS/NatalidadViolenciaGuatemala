@@ -235,3 +235,84 @@ resultados_df.to_csv('F3.csv', index=False)
 
 print("CSV generado correctamente.")
 
+# ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+alfabetismo_df = pd.read_csv('data/vif/VifAlfa.csv')
+
+alfabetismo_df.columns = alfabetismo_df.columns.str.strip()  # Eliminar espacios en blanco en las columnas
+alfabetismo_df['Grupos de edad'] = alfabetismo_df['Grupos de edad'].str.strip()  # Eliminar espacios en blanco en los grupos de edad
+
+# Convertir las columnas de Total, Alfabeta y Analfabeta a numérico, manejando errores
+alfabetismo_df['Total'] = pd.to_numeric(alfabetismo_df['Total'], errors='coerce')
+alfabetismo_df['Alfabeta'] = pd.to_numeric(alfabetismo_df['Alfabeta'], errors='coerce')
+alfabetismo_df['Analfabeta'] = pd.to_numeric(alfabetismo_df['Analfabeta'], errors='coerce')
+
+# Grupos de edad y años ya definidos
+grupos_edad = ["14 o menos", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-50", "Más de 50"]
+anos = range(9, 22)  # Años de 09 a 21
+
+# Inicializar el diccionario con valores por año, grupo de edad, nivel de alfabetismo y tipo (victima/agresor)
+grupos_edad_por_ano = {ano: {grupo: {nivel: {'VI Victima': 0, 'VI Agresor': 0} for nivel in ['Alfabeta', 'Analfabeta']} 
+                                      for grupo in grupos_edad} for ano in anos}
+
+# Iterar sobre el DataFrame para agregar los datos por nivel de alfabetismo, tipo de caso y grupo de edad
+for _, row in alfabetismo_df.iterrows():
+    # Asignar valores a los grupos de edad
+    if row['Grupos de edad'] in ['7 años', '8 años', '9 años', '10 años', '11 años', '12 años', '13 años', '14 años']:
+        grupo_edad = "14 o menos"
+    elif row['Grupos de edad'] == '15 a 19':
+        grupo_edad = "15-19"
+    elif row['Grupos de edad'] == '20 a 24':
+        grupo_edad = "20-24"
+    elif row['Grupos de edad'] == '25 a 29':
+        grupo_edad = "25-29"
+    elif row['Grupos de edad'] == '30 a 34':
+        grupo_edad = "30-34"
+    elif row['Grupos de edad'] == '35 a 39':
+        grupo_edad = "35-39"
+    elif row['Grupos de edad'] == '40 a 44':
+        grupo_edad = "40-44"
+    elif row['Grupos de edad'] == '45 a 49':
+        grupo_edad = "45-50"
+    elif row['Grupos de edad'] == '50 a 54':
+        grupo_edad = "Más de 50"
+    elif row['Grupos de edad'] == '55 a 59':
+        grupo_edad = "Más de 50"
+    elif row['Grupos de edad'] == '60 a 64':
+        grupo_edad = "Más de 50"
+    elif row['Grupos de edad'] == '65 y más':
+        grupo_edad = "Más de 50"
+    else:
+        continue  # Si no es un grupo de edad válido, se salta esa fila
+
+    # Asignar el tipo de caso (víctima o agresor)
+    if row['Victima o Agresor'] == 'V':  # Si es víctima
+        tipo_caso = 'VI Victima'
+    elif row['Victima o Agresor'] == 'A':  # Si es agresor
+        tipo_caso = 'VI Agresor'
+    else:
+        continue  # Si no es ni víctima ni agresor, salta esa fila
+
+    # Para cada nivel de alfabetismo, sumar los casos
+    for nivel in ['Alfabeta', 'Analfabeta']:
+        if pd.notna(row[nivel]) and row[nivel] > 0:  # Si hay datos válidos para el nivel de alfabetismo
+            # Sumar los casos por tipo de caso y nivel de alfabetismo
+            grupos_edad_por_ano[row['Anio']][grupo_edad][nivel][tipo_caso] += row[nivel]
+
+# Convertir los resultados a un DataFrame
+resultados = []
+for ano, grupo_dict in grupos_edad_por_ano.items():
+    for grupo, nivel_dict in grupo_dict.items():
+        row = {'Grupos de Edad': grupo, 'Año': ano}
+        for nivel, tipo_dict in nivel_dict.items():
+            for tipo_caso, total in tipo_dict.items():
+                row[f'{tipo_caso} {nivel}'] = total
+        resultados.append(row)
+
+# Crear el DataFrame final
+resultados_df = pd.DataFrame(resultados)
+
+# Guardar el resultado en un archivo CSV
+resultados_df.to_csv('F4.csv', index=False)
+
+print("CSV generado correctamente.")
