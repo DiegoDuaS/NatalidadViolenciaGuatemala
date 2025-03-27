@@ -303,7 +303,7 @@ for _, row in alfabetismo_df.iterrows():
 resultados = []
 for ano, grupo_dict in grupos_edad_por_ano.items():
     for grupo, nivel_dict in grupo_dict.items():
-        row = {'Grupos de Edad': grupo, 'Año': ano}
+        row = {'Grupo de Edad': grupo, 'Año': ano}
         for nivel, tipo_dict in nivel_dict.items():
             for tipo_caso, total in tipo_dict.items():
                 row[f'{tipo_caso} {nivel}'] = total
@@ -316,3 +316,289 @@ resultados_df = pd.DataFrame(resultados)
 resultados_df.to_csv('F4.csv', index=False)
 
 print("CSV generado correctamente.")
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Leer el CSV con los datos de nacimientos
+nacimientos_df = pd.read_csv('data/nat/NatEdad.csv')
+
+nacimientos_df.columns = nacimientos_df.columns.str.strip()
+nacimientos_df['Edad'] = nacimientos_df['Edad'].astype(str).str.strip()  # Asegurar que 'Edad' sea string
+nacimientos_df['Anio'] = nacimientos_df['Anio'].astype(str).str.strip()  # Asegurar que 'Anio' sea string
+
+# Convertir la columna 'Total' a numérico, manejando errores y reemplazando valores NaN con 0
+nacimientos_df['Total'] = pd.to_numeric(nacimientos_df['Total'], errors='coerce').fillna(0)
+
+# Definir los grupos de edad
+grupos_edad = {
+    "14 o menos": ['10', '11', '12', '13', '14'],
+    "15-19": ['15', '16', '17', '18', '19'],
+    "20-24": ['20', '21', '22', '23', '24'],
+    "25-29": ['25', '26', '27', '28', '29'],
+    "30-34": ['30', '31', '32', '33', '34'],
+    "35-39": ['35', '36', '37', '38', '39'],
+    "40-44": ['40', '41', '42', '43', '44'],
+    "45-50": ['45', '46', '47', '48', '49', '50'],
+    "Más de 50": ['51', '52', '53', '54', '55', '56', '57', '58', '59', '60', '61', '62', '63', '64', '65 y más']
+}
+
+# Inicializar diccionario para almacenar los resultados
+nacimientos_por_ano = {}
+
+# Iterar sobre el DataFrame
+for _, row in nacimientos_df.iterrows():
+    edad = row['Edad']
+    anio = row['Anio']
+
+    # Omitir la fila 'Todas las edades' y asegurarnos de que 'anio' es un número válido
+    if edad == "Todas las edades" or not anio.isdigit():
+        continue
+
+    anio = int(anio)  # Convertimos el año a entero
+
+    # Buscar a qué grupo de edad pertenece la fila
+    grupo_edad = next((grupo for grupo, edades in grupos_edad.items() if edad in edades), None)
+    
+    if grupo_edad:
+        if anio not in nacimientos_por_ano:
+            nacimientos_por_ano[anio] = {grupo: 0 for grupo in grupos_edad.keys()}
+        
+        # Sumar el total de nacimientos al grupo correspondiente
+        nacimientos_por_ano[anio][grupo_edad] += row['Total']
+
+# Convertir los resultados a un DataFrame con el formato deseado
+resultados = []
+for anio, grupo_dict in nacimientos_por_ano.items():
+    for grupo, total in grupo_dict.items():
+        resultados.append({'Grupo de Edad': grupo, 'Año': anio, 'Total Nacimientos': total})
+
+# Crear el DataFrame final
+resultados_nacimientos_df = pd.DataFrame(resultados)
+
+# Guardar los resultados en un archivo CSV
+resultados_nacimientos_df.to_csv('F5.csv', index=False)
+
+print("CSV generado correctamente.")
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+estado_civil_df = pd.read_csv('data/nat/NatEdadEC.csv')
+
+# Limpiar nombres de columnas y datos
+estado_civil_df.columns = estado_civil_df.columns.str.strip()
+estado_civil_df['Grupos de edad'] = estado_civil_df['Grupos de edad'].str.strip()
+estado_civil_df['Anio'] = estado_civil_df['Anio'].astype(str).str.strip()
+
+# Convertir las columnas de estado civil a numérico
+for col in ['Soltero(a)', 'Casado(a)', 'Unido(a)', 'Ignorado']:
+    estado_civil_df[col] = pd.to_numeric(estado_civil_df[col], errors='coerce').fillna(0)
+
+# Definir los grupos de edad estándar
+grupos_edad = {
+    "14 o menos": ["Menos de 15"],
+    "15-19": ["15 - 19"],
+    "20-24": ["20 - 24"],
+    "25-29": ["25 - 29"],
+    "30-34": ["30 - 34"],
+    "35-39": ["35 - 39"],
+    "40-44": ["40 - 44"],
+    "45-50": ["45 - 49"],
+    "Más de 50": ["50 y más"]
+}
+
+# Diccionario para almacenar los resultados
+estado_civil_por_ano = {}
+
+# Iterar sobre el DataFrame
+for _, row in estado_civil_df.iterrows():
+    grupo = row['Grupos de edad']
+    anio = row['Anio']
+    progenitor = row['Madre o Padre']  # Identifica si es Madre o Padre
+
+    # Omitir 'Todas las edades' y asegurarnos de que el año es válido
+    if grupo == "Todas las edades" or not anio.isdigit():
+        continue
+
+    anio = int(anio)  # Convertimos el año a entero
+
+    # Buscar el grupo de edad correspondiente
+    grupo_edad = next((g for g, edades in grupos_edad.items() if grupo in edades), None)
+
+    if grupo_edad:
+        if anio not in estado_civil_por_ano:
+            estado_civil_por_ano[anio] = {g: {'N Soltero Madre': 0, 'N Soltero Padre': 0,
+                                              'N Casado Madre': 0, 'N Casado Padre': 0,
+                                              'N Unido Madre': 0, 'N Unido Padre': 0,
+                                              'N Ignorado Madre': 0, 'N Ignorado Padre': 0}
+                                          for g in grupos_edad.keys()}
+
+        # Sumar valores según el progenitor
+        if progenitor == "Madre":
+            estado_civil_por_ano[anio][grupo_edad]['N Soltero Madre'] += row['Soltero(a)']
+            estado_civil_por_ano[anio][grupo_edad]['N Casado Madre'] += row['Casado(a)']
+            estado_civil_por_ano[anio][grupo_edad]['N Unido Madre'] += row['Unido(a)']
+            estado_civil_por_ano[anio][grupo_edad]['N Ignorado Madre'] += row['Ignorado']
+        elif progenitor == "Padre":
+            estado_civil_por_ano[anio][grupo_edad]['N Soltero Padre'] += row['Soltero(a)']
+            estado_civil_por_ano[anio][grupo_edad]['N Casado Padre'] += row['Casado(a)']
+            estado_civil_por_ano[anio][grupo_edad]['N Unido Padre'] += row['Unido(a)']
+            estado_civil_por_ano[anio][grupo_edad]['N Ignorado Padre'] += row['Ignorado']
+
+# Convertir resultados a DataFrame
+resultados = []
+for anio, grupo_dict in estado_civil_por_ano.items():
+    for grupo, valores in grupo_dict.items():
+        row = { 'Grupo de Edad': grupo,'Año': anio, **valores}
+        resultados.append(row)
+
+# Crear DataFrame final
+resultados_estado_civil_df = pd.DataFrame(resultados)
+
+# Guardar en un archivo CSV
+resultados_estado_civil_df.to_csv('F6.csv', index=False)
+
+print("CSV generado correctamente.")
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+# Leer el CSV con los datos de grupos ocupacionales
+ocupaciones_df = pd.read_csv('data/nat/NatOcup.csv')
+
+ocupaciones_df.columns = ocupaciones_df.columns.str.strip()
+ocupaciones_df['Grupos ocupacionales'] = ocupaciones_df['Grupos ocupacionales'].str.strip()
+ocupaciones_df['Anio'] = ocupaciones_df['Anio'].astype(str).str.strip()
+
+# Convertir las columnas de edad a numérico
+columnas_edad = ['Menos de 15', '15 - 19', '20 - 24', '25 - 29', '30 - 34', '35 - 39', '40 - 44', '45 - 49', '50 y más']
+for col in columnas_edad:
+    ocupaciones_df[col] = pd.to_numeric(ocupaciones_df[col], errors='coerce').fillna(0)
+
+# Definir los grupos de edad estándar
+grupos_edad = {
+    "14 o menos": "Menos de 15",
+    "15-19": "15 - 19",
+    "20-24": "20 - 24",
+    "25-29": "25 - 29",
+    "30-34": "30 - 34",
+    "35-39": "35 - 39",
+    "40-44": "40 - 44",
+    "45-50": "45 - 49",
+    "Más de 50": "50 y más"
+}
+
+# Ocupaciones a excluir
+excluir_ocupaciones = {"Ignorado", "Total República", "No especificado en otro grupo", "Todos los grupos ocupacionales"}
+
+# Diccionario para almacenar los resultados
+ocupaciones_por_ano = {}
+
+# Iterar sobre el DataFrame
+for _, row in ocupaciones_df.iterrows():
+    grupo_ocupacional = row['Grupos ocupacionales']
+    anio = row['Anio']
+
+    # Omitir las ocupaciones excluidas y asegurarnos de que el año es válido
+    if grupo_ocupacional in excluir_ocupaciones or not anio.isdigit():
+        continue
+
+    anio = int(anio)  # Convertimos el año a entero
+
+    # Iterar sobre los grupos de edad
+    for grupo_edad, columna in grupos_edad.items():
+        if anio not in ocupaciones_por_ano:
+            ocupaciones_por_ano[anio] = {g: {} for g in grupos_edad.keys()}
+
+        # Agregar la cantidad de nacimientos por grupo ocupacional
+        ocupaciones_por_ano[anio][grupo_edad][grupo_ocupacional] = row[columna]
+
+# Convertir resultados a DataFrame
+resultados = []
+for anio, grupo_dict in ocupaciones_por_ano.items():
+    for grupo, ocupaciones in grupo_dict.items():
+        row = {'Grupo de Edad': grupo ,'Año': anio, **ocupaciones}
+        resultados.append(row)
+
+# Crear DataFrame final
+resultados_ocupaciones_df = pd.DataFrame(resultados)
+
+# Guardar en un archivo CSV
+resultados_ocupaciones_df.to_csv('F7.csv', index=False)
+
+print("CSV generado correctamente.")
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+hijos_df = pd.read_csv('data/nat/NatNum.csv')
+
+# Limpiar nombres de columnas y datos
+hijos_df.columns = hijos_df.columns.str.strip()
+hijos_df['Edad de la madre'] = hijos_df['Edad de la madre'].astype(str).str.strip()
+hijos_df['Anio'] = hijos_df['Anio'].astype(str).str.strip()
+
+# Convertir las columnas numéricas
+columnas_hijos = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10 y más']
+for col in columnas_hijos:
+    hijos_df[col] = pd.to_numeric(hijos_df[col], errors='coerce').fillna(0)
+
+# Definir los grupos de edad
+grupos_edad = {
+    "14 o menos": ['10', '11', '12', '13', '14'],
+    "15-19": ['15', '16', '17', '18', '19'],
+    "20-24": ['20', '21', '22', '23', '24'],
+    "25-29": ['25', '26', '27', '28', '29'],
+    "30-34": ['30', '31', '32', '33', '34'],
+    "35-39": ['35', '36', '37', '38', '39'],
+    "40-44": ['40', '41', '42', '43', '44'],
+    "45-50": ['45', '46', '47', '48', '49', '50'],
+    "Más de 50": ['51', '52', '53', '54', '55', '56', '57', '58', '59']
+}
+
+# Diccionario para almacenar los resultados
+resultados_promedio = []
+
+# Iterar sobre los años
+for anio in hijos_df['Anio'].unique():
+    for grupo, edades in grupos_edad.items():
+        # Filtrar por año y grupo de edad
+        df_filtrado = hijos_df[(hijos_df['Anio'] == anio) & (hijos_df['Edad de la madre'].isin(edades))]
+
+        # Calcular el total de madres en el grupo
+        total_madres = df_filtrado[columnas_hijos].sum().sum()
+
+        # Calcular el total de hijos en el grupo
+        total_hijos = sum(df_filtrado[col] * int(col.split()[0]) for col in columnas_hijos)
+
+        # Calcular el promedio de hijos por madre
+        promedio_hijos = total_hijos.sum() / total_madres if total_madres > 0 else 0
+
+        # Agregar resultado
+        resultados_promedio.append({'Grupo de Edad': grupo , 'Año': anio,'Promedio de Hijos': round(promedio_hijos, 2)})
+
+# Convertir a DataFrame
+resultados_promedio_df = pd.DataFrame(resultados_promedio)
+
+# Guardar en CSV
+resultados_promedio_df.to_csv('F8.csv', index=False)
+
+print("CSV generado correctamente.")
+
+# ------------------------------------------------------------------------------------------------------------------------------------------------------
+
+import glob
+
+# Lista de archivos CSV
+archivos_csv = ["F1.csv", "F2.csv", "F3.csv", "F4.csv", "F5.csv", "F6.csv", "F7.csv", "F8.csv"]
+
+# Leer el primer archivo para establecer la base de la fusión
+df_final = pd.read_csv(archivos_csv[0])
+
+# Fusionar los demás archivos
+for archivo in archivos_csv[1:]:
+    df_temp = pd.read_csv(archivo)
+    df_final = pd.merge(df_final, df_temp, on=['Año', 'Grupo de Edad'], how='outer')
+
+# Guardar el resultado final
+df_final.to_csv("DataFinal.csv", index=False)
+
+print("CSV combinado generado correctamente: DataFinal.csv")
+
