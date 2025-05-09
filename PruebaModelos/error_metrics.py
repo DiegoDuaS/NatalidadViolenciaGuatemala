@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+import matplotlib.pyplot as plt
 
 def calculate_errors(y_pred, y_test, title):
     # Calculate Mean Absolute Error (MAE)
@@ -18,3 +19,15 @@ def calculate_errors(y_pred, y_test, title):
     print(f"MSE: {mse}")
     print(f"RMSE: {rmse}")
     print(f"R²: {r2}")
+    
+def diff_analysis(y_pred, y_test, title):
+    diff = y_pred - y_test
+    plt.title(f"Differenciales - {title}")
+    plt.plot(diff, 'o')
+    plt.show()
+    
+    plt.title(f"Frecuenci de diferenciales - {title}")
+    plt.hist(diff)
+    plt.show()
+    
+    
