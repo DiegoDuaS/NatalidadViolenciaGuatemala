@@ -60,3 +60,16 @@ def preparar_series_lstm(df, n_lags=3):
 
     return X, y
 
+def crear_secuencias_con_natalidad(df, n_steps):
+    features = [col for col in df.columns if col.startswith('VI')] + ['Total Nacimientos']
+    
+    X, y = [], []
+    for i in range(len(df) - n_steps):
+        secuencia = df.iloc[i:i+n_steps][features].values.astype(np.float32)
+        objetivo = df.iloc[i+n_steps]['Total Nacimientos']
+        X.append(secuencia)
+        y.append(objetivo)
+    
+    return np.array(X), np.array(y)
+
+

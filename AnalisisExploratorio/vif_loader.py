@@ -1,5 +1,6 @@
 import pandas as pd
 
+# Carga de datos de violencia desde raw hasta csv
 def area_sexo_edad_v(sheet, y, dest):
     if "Regresar" in sheet.columns:
         sheet.pop("Regresar")

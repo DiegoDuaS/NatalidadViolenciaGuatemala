@@ -1,5 +1,6 @@
 import pandas as pd
 
+# Carga de datos de natalidad desde raw hasta csv
 def nat_dep_mes(sheet, y, dest):
     if "Regresar" in sheet.columns:
         sheet.pop("Regresar")
